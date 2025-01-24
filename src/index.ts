@@ -45,6 +45,7 @@ interface AttributePurchaseRequest {
   transaction_id: string;
   code: string;
   platform: string;
+  token?: string;
   external_user_id?: string;
   auto_generated_external_user_id?: string;
   affiliate_code_id?: string;
@@ -265,8 +266,13 @@ class ShinaraSDK {
   public async attributePurchase(
     productId: string,
     transactionId: string,
+    token?: string,
   ): Promise<void> {
     try {
+      if (Platform.OS === 'android' && !token) {
+        throw new Error('Attribute purchase token is required on Android');
+      }
+
       const referralCode = await AsyncStorage.getItem(SDK_REFERRAL_CODE_KEY);
       if (!referralCode) {
         console.log('No stored referral code. Skipping purchase attribution.');
@@ -285,6 +291,7 @@ class ShinaraSDK {
       let attributePurchaseRequest: AttributePurchaseRequest = {
         product_id: productId,
         transaction_id: transactionId,
+        token: token,
         code: referralCode,
         platform: '',
       };
