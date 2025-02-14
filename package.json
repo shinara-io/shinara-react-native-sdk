@@ -1,6 +1,6 @@
 {
   "name": "shinara-react-native-sdk",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -14,7 +14,9 @@
   "description": "",
   "dependencies": {
     "@react-native-async-storage/async-storage": ">=2.0.0",
-    "react-native-uuid": "^2.0.3"
+    "react-native-device-info": "^14.0.4",
+    "react-native-localize": "^3.4.1",
+    "react-native-uuid": ">=2.0.3"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
@@ -26,6 +28,8 @@
   },
   "peerDependencies": {
     "@react-native-async-storage/async-storage": ">=2.0.0",
+    "react-native-device-info": "^14.0.4",
+    "react-native-localize": "^3.4.1",
     "react": ">=17.0.0",
     "react-native": ">=0.70.0",
     "react-native-uuid": ">=2.0.3"

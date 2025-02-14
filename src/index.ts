@@ -2,6 +2,7 @@ import {Platform} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
 import { API_HEADER_KEY, BASE_URL, REFERRAL_PARAM_KEY, SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, SDK_PLATFORM_HEADER_KEY, SDK_PROCESSED_TRANSACTIONS_KEY, SDK_REFERRAL_CODE_ID_KEY, SDK_REFERRAL_CODE_KEY, SDK_REFERRAL_PROGRAM_ID_KEY, SDK_REGISTERED_USERS_KEY, SDK_USER_EXTERNAL_USER_ID_KEY } from './constants';
+import { getTrackingSessionData } from './util';
 
 // Response Types
 
@@ -76,6 +77,7 @@ class ShinaraSDK {
     };
     try {
       const keyValidationResponse = await this.validateAPIKey();
+      this.triggerSetup();
       if (keyValidationResponse.track_retention && keyValidationResponse.track_retention === true) {
         this.triggerAppOpen();
       }
@@ -127,6 +129,31 @@ class ShinaraSDK {
           console.error('Error handling deep link:', e);
         }
         return;
+      }
+    }
+  }
+
+  private async triggerSetup(): Promise<void> {
+    const cachedAutoSDKGenExternalUserId = await AsyncStorage.getItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY);
+    if (cachedAutoSDKGenExternalUserId) {
+      // skip since already setup
+      return;
+    }
+
+    let autoSDKGenExternalUserId: string = uuid.v4().toString();
+
+    // TODO: Send backend request
+    try {
+      const trackingPayload = await getTrackingSessionData(autoSDKGenExternalUserId);
+      await this.makeRequest('/sdknewtrackingsession', 'POST', trackingPayload);
+      await AsyncStorage.setItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, autoSDKGenExternalUserId);
+    } catch (e) {
+      console.error('Error triggering app open:', e);
+      if (e instanceof Error && e.message.startsWith('HTTP error! status:')) {
+        // retriable error
+      } else {
+        // store auto gen external user id and don't retry
+        await AsyncStorage.setItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, autoSDKGenExternalUserId);
       }
     }
   }
@@ -214,9 +241,7 @@ class ShinaraSDK {
       return; // Skip if already registered
     }
 
-    const autoGenUserIdData = await AsyncStorage.getItem(
-      SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY,
-    );
+    const autoGenUserIdData = await AsyncStorage.getItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY);
     const autoGenUserId = autoGenUserIdData ? autoGenUserIdData : undefined;
 
     const codeIdData = await AsyncStorage.getItem(
