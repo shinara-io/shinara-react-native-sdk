@@ -1,7 +1,7 @@
 import {Platform} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
-import { API_HEADER_KEY, BASE_URL, REFERRAL_PARAM_KEY, SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, SDK_PLATFORM_HEADER_KEY, SDK_PROCESSED_TRANSACTIONS_KEY, SDK_REFERRAL_CODE_ID_KEY, SDK_REFERRAL_CODE_KEY, SDK_REFERRAL_PROGRAM_ID_KEY, SDK_REGISTERED_USERS_KEY, SDK_USER_EXTERNAL_USER_ID_KEY } from './constants';
+import { API_HEADER_KEY, BASE_URL, REFERRAL_PARAM_KEY, SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, SDK_PLATFORM_HEADER_KEY, SDK_PROCESSED_TRANSACTIONS_KEY, SDK_REFERRAL_CODE_ID_KEY, SDK_REFERRAL_CODE_KEY, SDK_REFERRAL_PROGRAM_ID_KEY, SDK_REGISTERED_USERS_KEY, SDK_SETUP_COMPLETED_KEY, SDK_USER_EXTERNAL_USER_ID_KEY } from './constants';
 import { getTrackingSessionData } from './util';
 
 // Response Types
@@ -134,26 +134,33 @@ class ShinaraSDK {
   }
 
   private async triggerSetup(): Promise<void> {
-    const cachedAutoSDKGenExternalUserId = await AsyncStorage.getItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY);
-    if (cachedAutoSDKGenExternalUserId) {
+    const sdkSetupCompleted = await AsyncStorage.getItem(SDK_SETUP_COMPLETED_KEY);
+    if (sdkSetupCompleted) {
       // skip since already setup
       return;
     }
 
     let autoSDKGenExternalUserId: string = uuid.v4().toString();
+    const cachedAutoSDKGenExternalUserId = await AsyncStorage.getItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY);
+    if (cachedAutoSDKGenExternalUserId) {
+      autoSDKGenExternalUserId = cachedAutoSDKGenExternalUserId;
+    } else {
+      await AsyncStorage.setItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, autoSDKGenExternalUserId);
+    }
+
 
     // TODO: Send backend request
     try {
       const trackingPayload = await getTrackingSessionData(autoSDKGenExternalUserId);
       await this.makeRequest('/sdknewtrackingsession', 'POST', trackingPayload);
-      await AsyncStorage.setItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, autoSDKGenExternalUserId);
+      await AsyncStorage.setItem(SDK_SETUP_COMPLETED_KEY, 'true');
     } catch (e) {
       console.error('Error triggering app open:', e);
       if (e instanceof Error && e.message.startsWith('HTTP error! status:')) {
         // retriable error
       } else {
         // store auto gen external user id and don't retry
-        await AsyncStorage.setItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, autoSDKGenExternalUserId);
+        await AsyncStorage.setItem(SDK_SETUP_COMPLETED_KEY, 'true');
       }
     }
   }

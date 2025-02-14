@@ -2,6 +2,7 @@ export const BASE_URL = "https://sdk-gateway-b85kv8d1.ue.gateway.dev"
 export const API_HEADER_KEY = "X-API-Key";
 export const SDK_PLATFORM_HEADER_KEY = "X-SDK-Platform";
 
+export const SDK_SETUP_COMPLETED_KEY = 'SHINARA_SDK_SETUP_COMPLETED';
 export const SDK_REFERRAL_CODE_KEY = 'SHINARA_SDK_REFERRAL_CODE';
 export const SDK_REFERRAL_PROGRAM_ID_KEY = 'SHINARA_SDK_PROGRAM_ID';
 export const SDK_REFERRAL_CODE_ID_KEY = 'SHINARA_SDK_REFERRAL_CODE_ID';
