@@ -1,8 +1,3 @@
-npm install
+# publish to npm
 npm run build
-mkdir dist
-cp package.json README.md dist/
-cp -R lib dist/
-cd dist
-npm pack
-cd ..
+npm publish --access public

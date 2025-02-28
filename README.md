@@ -7,13 +7,13 @@ This SDK provides a simple interface for integrating [Shinara](https://shinara.i
 You can install the SDK using npm or yarn:
 
 ```bash
-npm install github:shinara-io/shinara-react-native-sdk
+npm i shinara-react-native-sdk
 ```
 
 or
 
 ```bash
-yarn add github:shinara-io/shinara-react-native-sdk
+yarn add shinara-react-native-sdk
 ```
 
 ## Usage
