@@ -1,11 +1,11 @@
 {
   "name": "shinara-react-native-sdk",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
     "//build": "tsc",
-    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "build": "tsup src/index.ts --format esm,cjs --dts --outDir lib",
     "prepare": "npm run build",
     "test": "ts-node test/test-sdk.ts"
   },
