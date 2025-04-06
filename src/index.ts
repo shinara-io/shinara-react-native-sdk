@@ -217,7 +217,7 @@ class ShinaraSDK {
     }
   }
 
-  public async getPromoCodeIsFree(): Promise<boolean> {
+  public async getBrandCodeIsFree(): Promise<boolean> {
     try {
       const brandCodeIsFree = await AsyncStorage.getItem(SDK_REFERRAL_BRAND_CODE_IS_FREE_KEY);
       return brandCodeIsFree === 'true' ? true : false;
@@ -227,7 +227,7 @@ class ShinaraSDK {
     }
   }
 
-  public async getPromoCodePlacementId(): Promise<string | undefined> {
+  public async getBrandCodePlacementId(): Promise<string | undefined> {
     try {
       const brandCodePlacementId = await AsyncStorage.getItem(SDK_REFERRAL_BRAND_CODE_PLACEMENT_ID_KEY);
       return brandCodePlacementId ?? undefined;
