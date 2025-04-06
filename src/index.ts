@@ -217,10 +217,10 @@ class ShinaraSDK {
     }
   }
 
-  public async getPromoCodeIsFree(): Promise<boolean | undefined> {
+  public async getPromoCodeIsFree(): Promise<boolean> {
     try {
       const brandCodeIsFree = await AsyncStorage.getItem(SDK_REFERRAL_BRAND_CODE_IS_FREE_KEY);
-      return brandCodeIsFree === 'true' ? true : undefined;
+      return brandCodeIsFree === 'true' ? true : false;
     } catch (e) {
       console.error('Error getting brand code is free:', e);
       throw new Error('Failed to get brand code is free');
