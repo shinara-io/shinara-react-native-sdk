@@ -1,7 +1,7 @@
 import {Platform} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
-import { API_HEADER_KEY, BASE_URL, REFERRAL_PARAM_KEY, SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, SDK_PLATFORM_HEADER_KEY, SDK_PROCESSED_TRANSACTIONS_KEY, SDK_REFERRAL_CODE_ID_KEY, SDK_REFERRAL_CODE_KEY, SDK_REFERRAL_PROGRAM_ID_KEY, SDK_REGISTERED_USERS_KEY, SDK_SETUP_COMPLETED_KEY, SDK_USER_EXTERNAL_USER_ID_KEY } from './constants';
+import { API_HEADER_KEY, BASE_URL, REFERRAL_PARAM_KEY, SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY, SDK_PLATFORM_HEADER_KEY, SDK_PROCESSED_TRANSACTIONS_KEY, SDK_REFERRAL_BRAND_CODE_ID_KEY, SDK_REFERRAL_BRAND_CODE_IS_FREE_KEY, SDK_REFERRAL_BRAND_CODE_PLACEMENT_ID_KEY, SDK_REFERRAL_CODE_ID_KEY, SDK_REFERRAL_CODE_KEY, SDK_REFERRAL_PROGRAM_ID_KEY, SDK_REGISTERED_USERS_KEY, SDK_SETUP_COMPLETED_KEY, SDK_USER_EXTERNAL_USER_ID_KEY } from './constants';
 import { getTrackingSessionData } from './util';
 
 // Response Types
@@ -17,6 +17,13 @@ export interface ValidateReferralCodeRequest {
 
 export interface ValidateReferralCodeResponse {
   programId: string | undefined;
+  brand_code: ValidateReferralBrandCodeData | undefined;
+}
+
+export interface ValidateReferralBrandCodeData {
+  code_id: string;
+  is_free: boolean;
+  placement_id?: string;
 }
 
 export interface RegisterUserRequest {
@@ -146,16 +153,43 @@ class ShinaraSDK {
       if (cachedAutoSDKGenExternalUserId) {
         data.auto_generated_external_user_id = cachedAutoSDKGenExternalUserId;
       }
+      if (data.brand_code_data !== undefined) {
+        // set brand code data
+        await AsyncStorage.setItem(SDK_REFERRAL_BRAND_CODE_ID_KEY, data.brand_code_data.code_id);
+        if (data.brand_code_data.is_free) {
+          await AsyncStorage.setItem(SDK_REFERRAL_BRAND_CODE_IS_FREE_KEY, 'true');
+        } else if (data.brand_code_data.placement_id) {
+          await AsyncStorage.setItem(SDK_REFERRAL_BRAND_CODE_PLACEMENT_ID_KEY, data.brand_code_data.placement_id);
+        }
+        // clear affiliate code data
+        AsyncStorage.removeItem(SDK_REFERRAL_CODE_KEY);
+        AsyncStorage.removeItem(SDK_REFERRAL_PROGRAM_ID_KEY);
+        AsyncStorage.removeItem(SDK_REFERRAL_CODE_ID_KEY);
+        // return
+        return {
+          programId: undefined,
+          brand_code: data.brand_code_data,
+        }
+      }
+
       if (data.campaign_id === undefined) {
         throw new Error('Invalid Referral Code');
       }
+
+      // add affiliate code data
       await AsyncStorage.setItem(SDK_REFERRAL_CODE_KEY, request.code);
       await AsyncStorage.setItem(SDK_REFERRAL_PROGRAM_ID_KEY, data.campaign_id);
       if (data.affiliate_code_id) {
         await AsyncStorage.setItem(SDK_REFERRAL_CODE_ID_KEY, data.affiliate_code_id);
       }
+      // clear brand code data
+      AsyncStorage.removeItem(SDK_REFERRAL_BRAND_CODE_ID_KEY);
+      AsyncStorage.removeItem(SDK_REFERRAL_BRAND_CODE_IS_FREE_KEY);
+      AsyncStorage.removeItem(SDK_REFERRAL_BRAND_CODE_PLACEMENT_ID_KEY);
+      // return
       return {
         programId: data.campaign_id,
+        brand_code: undefined,
       };
     } catch (e) {
       console.error('Error validating referral code:', e);
@@ -180,6 +214,26 @@ class ShinaraSDK {
     } catch (e) {
       console.error('Error getting program id:', e);
       throw new Error('Failed to get program id');
+    }
+  }
+
+  public async getBrandCodeIsFree(): Promise<boolean | undefined> {
+    try {
+      const brandCodeIsFree = await AsyncStorage.getItem(SDK_REFERRAL_BRAND_CODE_IS_FREE_KEY);
+      return brandCodeIsFree === 'true' ? true : undefined;
+    } catch (e) {
+      console.error('Error getting brand code is free:', e);
+      throw new Error('Failed to get brand code is free');
+    }
+  }
+
+  public async getBrandCodePlacementId(): Promise<string | undefined> {
+    try {
+      const brandCodePlacementId = await AsyncStorage.getItem(SDK_REFERRAL_BRAND_CODE_PLACEMENT_ID_KEY);
+      return brandCodePlacementId ?? undefined;
+    } catch (e) {
+      console.error('Error getting brand code placement id:', e);
+      throw new Error('Failed to get brand code placement id');
     }
   }
 
