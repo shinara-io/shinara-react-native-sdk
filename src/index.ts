@@ -145,14 +145,16 @@ class ShinaraSDK {
     request: ValidateReferralCodeRequest,
   ): Promise<ValidateReferralCodeResponse> {
     try {
-      let data = await this.makeRequest('/api/code/validate', 'POST', {
+      let requestBody = {
         code: request.code,
         platform: '',
-      });
+        auto_generated_external_user_id: undefined as string | undefined,
+      };
       const cachedAutoSDKGenExternalUserId = await AsyncStorage.getItem(SDK_AUTO_GEN_USER_EXTERNAL_ID_KEY);
       if (cachedAutoSDKGenExternalUserId) {
-        data.auto_generated_external_user_id = cachedAutoSDKGenExternalUserId;
+        requestBody.auto_generated_external_user_id = cachedAutoSDKGenExternalUserId;
       }
+      let data = await this.makeRequest('/api/code/validate', 'POST', requestBody);
       if (data.brand_code_data !== undefined) {
         // set brand code data
         await AsyncStorage.setItem(SDK_REFERRAL_BRAND_CODE_ID_KEY, data.brand_code_data.code_id);
